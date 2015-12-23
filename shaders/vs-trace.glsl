@@ -12,7 +12,15 @@ varying vec3 vMPos;
 varying vec2 vUv;
 varying float vNoise;
 
+#define LINKS @links
+
+
+uniform vec4 links[LINKS];
+varying vec4 vLinks[LINKS];
+
 $simplex
+
+
 
 
 void main(){
@@ -28,6 +36,13 @@ void main(){
   vCam   = ( iModelMat * vec4( cameraPosition , 1. ) ).xyz;
 
   vNoise = snoise( vMPos  * 10. + vec3(0. , time , 0.));
+  
+  for( int i = 0; i < LINKS; i++ ){
+
+    vec3 nPos =  ( iModelMat * vec4( links[i].xyz , 1. ) ).xyz;
+    vLinks[i] = vec4( nPos , links[i].w );
+
+  }
 
   //vLight = ( iModelMat * vec4(  vec3( 400. , 1000. , 400. ) , 1. ) ).xyz;
 

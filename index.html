@@ -36,6 +36,7 @@
 <script src="lib/ShaderLoader.js"             ></script>
 <script src="lib/ObjectControls.js"           ></script>
 <script src="lib/MouseMoveControls.js"        ></script>
+<script src="lib/RotateControls.js"           ></script>
 <script src="lib/PhysicsRenderer.js"          ></script>
 
 
@@ -67,6 +68,51 @@
 
   var loaded = 0;
   var neededToLoad = 3;
+
+  var TOTAL_LINKS = 5;
+
+  var v1 = new THREE.Vector3();
+
+
+  var mat = new THREE.MeshBasicMaterial();
+  var geo = new THREE.IcosahedronGeometry(.03 , 2);
+  var LINKS = [
+    {
+      title:"normal",
+      file: "forPeter",
+      sound: "monk13",
+      geo : geo,
+      mat : mat
+    },
+    {
+      title:"normal",
+      file: "forPeter",
+      sound: "monk14",
+      geo : geo,
+      mat : mat
+    },
+
+    {
+      title:"normal",
+      file: "forPeter",
+      sound: "monk15",
+      geo : geo,
+      mat : mat
+    },
+
+    {
+      title:"normal",
+      file: "forPeter",
+      sound: "monk16",
+      geo : geo,
+      mat : mat
+    },
+
+
+  ];
+  var links = [];
+
+
 
   //shaders.load( 'ss-curlFront'    , 'sim'    , 'simulation' );
 
@@ -150,6 +196,7 @@
   var hoveredLink = undefined;
 
   var uniforms = {
+
     t_audio:  { type:"t"  , value : null },
     dT:       { type:"f"  , value : 0             },
     time:     { type:"f"  , value : 0             },
@@ -162,6 +209,7 @@
     links: { type:"v4v" , value:[] },
     activeLink: { type:"v4" , value:new THREE.Vector4() },
     hoveredLink: { type:"v4" , value:new THREE.Vector4() }
+
   }
 
 
@@ -181,12 +229,38 @@
   */
   var audio = new AudioController();
 
-  var stream = new Stream( "audio/glistenVox.mp3" , audio.ctx , audio.gain );
-
   //var userAudio = new UserAudio( audio.ctx , audio.gain);
 
-  //audio.mute.gain.value = 0;
+  audio.mute.gain.value = 0;
   uniforms.t_audio.value = audio.texture;
+
+  var stream = new Stream( "" , audio.ctx , audio.gain );
+
+    var audioBuffers = [];
+
+  for( var i = 0; i < LINKS.length; i++ ){
+
+    var file = "audio/sounds/" + LINKS[i].sound + ".mp3"
+    var aBuff = new AudioBuffer( audio , file );
+    aBuff.linkID = i;
+
+
+    audioBuffers.push( aBuff );
+    neededToLoad += 1;
+    var ind = i;
+
+    LINKS[i].buffer = aBuff.buffer;
+
+    aBuff.addLoadEvent(function(){
+
+   
+      onLoad();
+
+    })
+
+  }
+
+
 
   var v1 = new THREE.Vector3();
   
@@ -204,7 +278,7 @@
       var ar = window.innerWidth / window.innerHeight;
 
       camera = new THREE.PerspectiveCamera( 40, ar , .01, 1000 );
-      camera.position.z = 5;
+      camera.position.z = .5;
 
       renderer = new THREE.WebGLRenderer({antialias:true});
       renderer.setSize( window.innerWidth, window.innerHeight );
@@ -220,6 +294,8 @@
       controls = new THREE.TrackballControls( camera );
 
       controls = new THREE.MouseMoveControls( camera );
+
+     // controls = new RotateControls( camera );
       //controls.noRotate = true;
 
 
@@ -236,13 +312,15 @@
       clock = new THREE.Clock();
 
 
+      var fs = shaders.setValue( shaders.fs.eyeTrace , 'links' , LINKS.length );
+      var vs = shaders.setValue( shaders.vs.trace , 'links' , LINKS.length );
 
 
       var mat = new THREE.ShaderMaterial({
         uniforms: uniforms,
-        vertexShader: shaders.vs.trace,
-        fragmentShader: shaders.fs.eyeTrace,
-        // opacity: 0, transparent: true
+        vertexShader: vs,
+        fragmentShader: fs,
+        opacity: 0, transparent: true
       })
 
 
@@ -254,7 +332,7 @@
       mainBody.rotation.y = Math.PI;
       mainBody.position.x = 0;
       mainBody.position.y = 0;
-      mainBody.scale.multiplyScalar( 5 );
+      //mainBody.scale.multiplyScalar( 5 );
       mainBody.visible = false;
 
 
@@ -265,7 +343,7 @@
       highBody.rotation.y = Math.PI;
       highBody.position.x = 0;
       highBody.position.y = 0;
-      highBody.scale.multiplyScalar( 5 );
+      //highBody.scale.multiplyScalar( 5 );
 
 
       var mat = new THREE.MeshBasicMaterial({transparent:true,opacity:0});
@@ -274,7 +352,7 @@
       controlBod.rotation.y = Math.PI;
       controlBod.position.x = 0;
       controlBod.position.y = 0;
-      controlBod.scale.multiplyScalar( 5 );
+      //controlBod.scale.multiplyScalar( 5 );
       scene.add( controlBod )
 
 
@@ -292,7 +370,7 @@
         highBody.visible = true;
       }
 
-      objectControls.add( controlBod );
+     // objectControls.add( controlBod );
 
 
 
@@ -301,11 +379,38 @@
       scene.add( mouse );
 
 
+
+
+
       var geo = new THREE.PlaneGeometry( 100000 , 100000 );
       var mat = new THREE.MeshNormalMaterial({side: THREE.DoubleSide, opacity: 0, transparent: true});
+
       intersectionPlane = new THREE.Mesh( geo , mat );
       //intersectionPlane.visible = false;
       //scene.add( intersectionPlane );
+
+      for(var i = 0; i < LINKS.length; i++ ){
+
+
+        LINKS[i].buffer = audioBuffers[i].buffer;
+        var l = new Song( audio, objectControls , i , LINKS[i] );
+
+        uniforms.links.value.push( l.uniform );
+        links.push( l );
+
+        v1.x = ( Math.random() - .5) * .1;
+        v1.y = ( Math.random() - .5) * .1;
+        v1.z = ( Math.random() - .5) * .1;
+
+        l.updatePosition( v1 );
+
+        l.velocity.copy( v1 );
+        l.velocity.multiplyScalar( .4 );
+
+        scene.add( l.body );
+
+
+      }
 
 
   }
@@ -315,6 +420,7 @@
     requestAnimationFrame( animate );
 
     uniforms.time.value += clock.getDelta();
+    
     mainBody.updateMatrixWorld();
     //highBody.updateMatrixWorld();
 
@@ -330,6 +436,15 @@
     audio.update();
 
     TWEEN.update();
+
+
+    for( var i = 0; i < links.length; i++  ){
+      links[i].updateForces();
+    }
+
+    for( var i = 0; i < links.length; i++  ){
+      links[i].update();
+    }
    
 
     renderer.render( scene , camera );
@@ -362,7 +477,6 @@
   tween.audio = this.audio
   tween.onUpdate(function(){
     stream.gain.gain.value = this.tweenTMP.v;
-    console.log( this.tweenTMP.v );
   }.bind( this));
 
   tween.onComplete( function(){
@@ -380,8 +494,6 @@
     }.bind( this));
 
     t.onComplete( function(){
-
-      console.log('sss')
 
       stream.play();
 

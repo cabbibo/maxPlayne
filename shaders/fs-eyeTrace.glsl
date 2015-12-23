@@ -9,6 +9,7 @@ uniform sampler2D t_color;
 uniform mat4 modelViewMatrix;
 uniform mat3 normalMatrix;
 
+
 varying vec3 vPos;
 varying vec3 vCam;
 varying vec3 vNorm;
@@ -19,6 +20,13 @@ varying vec3 vMPos;
 varying vec2 vUv;
 varying float vNoise;
 
+
+#define LINKS @links
+
+varying vec4 vLinks[LINKS];
+
+
+uniform vec4 links[LINKS];
 
 $uvNormalMap
 $semLookup
@@ -47,6 +55,13 @@ vec3 rgb2hsv(vec3 c)
     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
 
+vec3 hsv(float h, float s, float v)
+{
+    
+  return mix( vec3( 1.0 ), clamp( ( abs( fract(
+    h + vec3( 3.0, 2.0, 1.0 ) / 3.0 ) * 6.0 - 3.0 ) - 1.0 ), 0.0, 1.0 ), s ) * v;
+}
+
 
 //--------------------------------
 // Modelling 
@@ -56,9 +71,15 @@ vec2 map( vec3 pos ){
     vec2 res = vec2( 1000000. , 0. );
 
 
-    vec2 centerBlob = vec2( length( pos - vec3( 0. , -0.03 , .05 ) ) - .03, 1. );
+    //vec2 centerBlob = vec2( length( pos - vec3( 0. , -0.03 , .05 ) ) - .03, 1. );
+   // res = smoothU( res , centerBlob , .2 );
 
-    res = smoothU( res , centerBlob , .2 );
+    for( int i = 0; i< LINKS; i++ ){
+      vec2 centerBlob = vec2( length( pos - vLinks[i].xyz ) - .02, float( i ) );
+      res = smoothU( res , centerBlob , .05 );
+    }
+
+
 
     return res;
     
@@ -94,17 +115,19 @@ void main(){
 
   vec2 res = calcIntersection( ro , refr );
 
-  col = texture2D( t_matcap , semLookup( refr , fNorm , modelViewMatrix , normalMatrix ) ).xyz;
-
+  //col = texture2D( t_matcap , semLookup( refr , fNorm , modelViewMatrix , normalMatrix ) ).xyz;
+  col = vec3( 1.+dot( fNorm, rd ));
+  float alpha =  .1;
   if( res.y > -.5 ){
 
     p = ro + refr * res.x;
     vec3 n = calcNormal( p );
 
     //col += n * .5 + .5;
+    vec3 h = hsv( res.y / 4. , 1. , 1. );
+    col += h *  texture2D( t_matcap , semLookup( refr , n , modelViewMatrix , normalMatrix ) ).xyz;
 
-    col +=  texture2D( t_matcap , semLookup( refr , n , modelViewMatrix , normalMatrix ) ).xyz;
-
+    alpha = 1.;
     //col *= texture2D( t_audio , vec2(  abs( n.x ) , 0. ) ).xyz;
 
   }

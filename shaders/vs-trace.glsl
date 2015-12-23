@@ -16,7 +16,11 @@ varying float vNoise;
 
 
 uniform vec4 links[LINKS];
+uniform vec4 hoveredLink;
+uniform vec4 activeLink;
 varying vec4 vLinks[LINKS];
+varying vec4 vHovered;
+varying vec4 vActive;
 
 $simplex
 
@@ -43,6 +47,12 @@ void main(){
     vLinks[i] = vec4( nPos , links[i].w );
 
   }
+
+  vec3 nPos =  ( iModelMat * vec4( hoveredLink.xyz , 1. ) ).xyz;
+  vHovered = vec4( nPos , hoveredLink.w );
+
+  nPos =  ( iModelMat * vec4( activeLink.xyz , 1. ) ).xyz;
+  vActive = vec4( nPos , activeLink.w );
 
   //vLight = ( iModelMat * vec4(  vec3( 400. , 1000. , 400. ) , 1. ) ).xyz;
 

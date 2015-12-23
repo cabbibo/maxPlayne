@@ -106,11 +106,11 @@ Song.prototype.hoverOut = function(){
 
 Song.prototype.select = function(){
 
-  if( activeLink !== this ){
+  v1.set( Math.random() - .5 ,Math.random() - .5,Math.random() - .5 );
+  v1.multiplyScalar( .02 );
+  this.velocity.add( v1 );
 
-    v1.set( Math.random() - .5 ,Math.random() - .5,Math.random() - .5 );
-    v1.multiplyScalar( .02 );
-    this.velocity.add( v1 );
+  if( activeLink !== this ){
 
 
     var file = "audio/" + this.file + ".mp3";

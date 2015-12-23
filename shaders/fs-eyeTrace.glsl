@@ -27,6 +27,8 @@ varying vec4 vLinks[LINKS];
 
 
 uniform vec4 links[LINKS];
+varying vec4 vHovered;
+varying vec4 vActive;
 
 $uvNormalMap
 $semLookup
@@ -35,14 +37,15 @@ $semLookup
 // Branch Code stolen from : https://www.shadertoy.com/view/ltlSRl
 // Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License
 
-const float MAX_TRACE_DISTANCE = 5.0;             // max trace distance
-const float INTERSECTION_PRECISION = 0.01;        // precision of the intersection
+const float MAX_TRACE_DISTANCE = 1.0;             // max trace distance
+const float INTERSECTION_PRECISION = 0.001;        // precision of the intersection
 const int NUM_OF_TRACE_STEPS = 25;
 const float PI = 3.14159;
 
 
 
 $smoothU
+$opU
 
 vec3 rgb2hsv(vec3 c)
 {
@@ -75,9 +78,24 @@ vec2 map( vec3 pos ){
    // res = smoothU( res , centerBlob , .2 );
 
     for( int i = 0; i< LINKS; i++ ){
+
       vec2 centerBlob = vec2( length( pos - vLinks[i].xyz ) - .02, float( i ) );
       res = smoothU( res , centerBlob , .05 );
     }
+
+    if( vHovered.w > 0. ){
+      vec2 centerBlob = vec2( length( pos - vHovered.xyz ) - .023 * vHovered.w, 10. );
+      res = opU( res , centerBlob  );
+    }
+
+    if( vActive.w > 0. ){
+      vec2 centerBlob = vec2( length( pos - vActive.xyz ) - .025 * vActive.w, 11. );
+      res = opU( res , centerBlob  );
+    }
+
+
+
+
 
 
 
@@ -95,7 +113,7 @@ $calcAO
 
 void main(){
 
-  vec3 fNorm = uvNormalMap( t_normal , vPos , vUv * 20. , vNorm , .6 , 1. );
+  vec3 fNorm = uvNormalMap( t_normal , vPos , vUv * 20. , vNorm , .1 , .2 );
 
   vec3 ro = vPos;
   vec3 rd = normalize( vPos - vCam );
@@ -111,14 +129,18 @@ void main(){
 
   //col += fNorm * .5 + .5;
 
-  vec3 refr = refract( rd , fNorm , 1. / 1.) ;
+  vec3 refr = refract( rd , fNorm , 1. / 1.1 ) ;
 
   vec2 res = calcIntersection( ro , refr );
 
   //col = texture2D( t_matcap , semLookup( refr , fNorm , modelViewMatrix , normalMatrix ) ).xyz;
-  col = vec3( 1.+dot( fNorm, rd ));
+ 
+  float fr = 1.+dot( fNorm, rd );
+  col = texture2D( t_audio , vec2( fr , 0.)).xyz * fr;
   float alpha =  .1;
   if( res.y > -.5 ){
+
+    if( res.y < 10. ){
 
     p = ro + refr * res.x;
     vec3 n = calcNormal( p );
@@ -128,6 +150,15 @@ void main(){
     col += h *  texture2D( t_matcap , semLookup( refr , n , modelViewMatrix , normalMatrix ) ).xyz;
 
     alpha = 1.;
+
+    }else{
+      if( res.y == 10. ){
+        col = vec3( 1. ) - col; //vec3( 1. );
+      }else{
+        col = vec3( 1. , .5 , .5 ) - col; //vec3( 1. )
+
+      }
+    }
     //col *= texture2D( t_audio , vec2(  abs( n.x ) , 0. ) ).xyz;
 
   }

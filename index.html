@@ -86,7 +86,7 @@
     },
     {
       title:"normal",
-      file: "forPeter",
+      file: "growSometimes",
       sound: "monk14",
       geo : geo,
       mat : mat
@@ -94,7 +94,7 @@
 
     {
       title:"normal",
-      file: "forPeter",
+      file: "glistenVox",
       sound: "monk15",
       geo : geo,
       mat : mat
@@ -102,7 +102,7 @@
 
     {
       title:"normal",
-      file: "forPeter",
+      file: "lonely",
       sound: "monk16",
       geo : geo,
       mat : mat
@@ -119,6 +119,9 @@
   shaders.load( 'fs-trace'  , 'trace' , 'fragment' );
   shaders.load( 'fs-eyeTrace'  , 'eyeTrace' , 'fragment' );
   shaders.load( 'vs-trace'  , 'trace' , 'vertex'   );
+
+  shaders.load( 'vs-halo' , 'halo' , 'vertex' );
+  shaders.load( 'fs-halo' , 'halo' , 'fragment' );
 
   shaders.shaderSetLoaded = function(){
 
@@ -231,7 +234,7 @@
 
   //var userAudio = new UserAudio( audio.ctx , audio.gain);
 
-  audio.mute.gain.value = 0;
+  //audio.mute.gain.value = 0;
   uniforms.t_audio.value = audio.texture;
 
   var stream = new Stream( "" , audio.ctx , audio.gain );
@@ -412,6 +415,47 @@
 
       }
 
+      var geo = new THREE.IcosahedronGeometry( .03 , 4 );
+      var mat = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: shaders.vs.halo,
+        fragmentShader: shaders.fs.halo,
+      });
+
+
+      for( var j = 0; j < 5; j++){
+        var obj = new THREE.Object3D();
+
+        for( var i = 0; i < 10; i++ ){
+          var mesh = new THREE.Mesh( geo , mat );
+          //mesh.position.y = .3 * Math.sin(( i / 10 ) * 2 * Math.PI);
+          //mesh.position.x = .3 * Math.cos(( i / 10 ) * 2 * Math.PI);
+          //mesh.position.y
+         // mesh.position.z = -.5;
+         //mesh.rotation.x = (j / 5) * 2 * Math.PI;
+          mesh.rotation.z = (i / 10 ) * 2 * Math.PI;
+          obj.add( mesh );
+        }
+
+      /*  obj.position.x =2. * ( Math.random() - .5);
+        obj.position.y =2. * ( Math.random() - .5);
+        obj.position.z = Math.random() - 1.;
+
+        obj.position.normalize();
+        obj.position.multiplyScalar( .3 );
+        obj.position.z -= .1;*/
+
+        obj.position.z = -.2 + .2 * (-j / 5);
+        obj.scale.multiplyScalar( (j / 5) * 4. );
+
+        obj.rotation.x = Math.random();
+        obj.rotation.y = Math.random();
+        obj.rotation.z = Math.random();
+        obj.lookAt( new THREE.Vector3());
+        scene.add( obj );
+
+      }
+
 
   }
 
@@ -427,6 +471,34 @@
 
 
     uniforms.iModelMat.value.getInverse( mainBody.matrixWorld );
+
+    if( hoveredLink ){
+      uniforms.hoveredLink.value.x = hoveredLink.position.x;
+      uniforms.hoveredLink.value.y = hoveredLink.position.y;
+      uniforms.hoveredLink.value.z = hoveredLink.position.z;
+      uniforms.hoveredLink.value.w = 1;
+    }else{
+
+      uniforms.hoveredLink.value.x = 10000;
+      uniforms.hoveredLink.value.y = 0;
+      uniforms.hoveredLink.value.z = 0;
+      uniforms.hoveredLink.value.w = 0;
+
+    }
+
+    if( activeLink ){
+      uniforms.activeLink.value.x = activeLink.position.x;
+      uniforms.activeLink.value.y = activeLink.position.y;
+      uniforms.activeLink.value.z = activeLink.position.z;
+      uniforms.activeLink.value.w = 1;
+    }else{
+      uniforms.activeLink.value.x = 10000;
+      uniforms.activeLink.value.y = 0;
+      uniforms.activeLink.value.z = 0;
+      uniforms.activeLink.value.w = 0;
+
+    }
+
 
 
 

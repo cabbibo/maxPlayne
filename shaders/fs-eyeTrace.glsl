@@ -135,7 +135,7 @@ void main(){
 
   //col = texture2D( t_matcap , semLookup( refr , fNorm , modelViewMatrix , normalMatrix ) ).xyz;
  
-  float fr = 1.+dot( fNorm, rd );
+  float fr = 1. + dot( fNorm, rd );
   col = texture2D( t_audio , vec2( fr , 0.)).xyz * fr;
   float alpha =  .1;
   if( res.y > -.5 ){

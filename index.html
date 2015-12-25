@@ -64,7 +64,7 @@
   var iPoint;
 
 
-  var shaders = new ShaderLoader( 'shaders' );
+  var shaders = new ShaderLoader( 'shaders' , 'shaders/chunks' );
 
   var loaded = 0;
   var neededToLoad = 3;
@@ -79,33 +79,45 @@
   var LINKS = [
     {
       title:"normal",
-      file: "forPeter",
-      sound: "monk13",
+      file: "enviornment1",
+      sound: "slipperySound",
       geo : geo,
-      mat : mat
+      mat : mat,
+      bg: "slippery",
+      playne : "slipperyMax",
+      color : 0x000000
     },
     {
       title:"normal",
-      file: "growSometimes",
-      sound: "monk14",
+      file: "enviornment2",
+      sound: "tangSound",
       geo : geo,
-      mat : mat
-    },
-
-    {
-      title:"normal",
-      file: "glistenVox",
-      sound: "monk15",
-      geo : geo,
-      mat : mat
+      mat : mat,
+      bg: "tang",
+      playne : "tangMax",
+      color : 0xff0000
     },
 
     {
       title:"normal",
-      file: "lonely",
-      sound: "monk16",
+      file: "enviornment3",
+      sound: "pureSound",
       geo : geo,
-      mat : mat
+      mat : mat,
+      bg: "pure",
+      playne : "pureMax",
+      color : 0xffffff
+    },
+
+    {
+      title:"normal",
+      file: "enviornment4",
+      sound: "crackleSound",
+      geo : geo,
+      mat : mat,
+      bg: "crackle",
+      playne : "crackleMax",
+      color : 0x0000ff
     },
 
 
@@ -122,6 +134,24 @@
 
   shaders.load( 'vs-halo' , 'halo' , 'vertex' );
   shaders.load( 'fs-halo' , 'halo' , 'fragment' );
+
+  for( var i = 0; i < LINKS.length; i++ ){
+
+    var title = LINKS[i].bg;
+    var fsLink = title + "/fs"
+    var vsLink = title + "/vs"
+
+    shaders.load(fsLink , title , 'fragment' );
+    shaders.load(vsLink , title , 'vertex' );
+
+    var titleM = title + "Max";
+    var fsLink = title + "/fsMax";
+    var vsLink = title + "/vsMax";
+
+    shaders.load(fsLink , titleM , 'fragment' );
+    shaders.load(vsLink , titleM , 'vertex' );
+
+  }
 
   shaders.shaderSetLoaded = function(){
 
@@ -238,8 +268,10 @@
   uniforms.t_audio.value = audio.texture;
 
   var stream = new Stream( "" , audio.ctx , audio.gain );
+  stream.audio.loop = true;
 
-    var audioBuffers = [];
+  var audioBuffers = [];
+  var changeNote;
 
   for( var i = 0; i < LINKS.length; i++ ){
 
@@ -259,15 +291,30 @@
    
       onLoad();
 
-    })
+    });
 
   }
+
+    var file = "audio/switch.mp3"
+    var aBuff = new AudioBuffer( audio , file );
+   
+    neededToLoad += 1;
+
+    aBuff.addLoadEvent(function(){
+   
+      onLoad();
+
+    });
+
+
 
 
 
   var v1 = new THREE.Vector3();
   
   function init(){
+
+      changeNote = new BufferedAudio( aBuff.buffer , audio.ctx , audio.gain , false );
 
 
 
@@ -286,6 +333,8 @@
       renderer = new THREE.WebGLRenderer({antialias:true});
       renderer.setSize( window.innerWidth, window.innerHeight );
       //renderer.setPixelRatio( 4.5 )
+
+      renderer.setClearColor( 0xffffff , 1)
 
       renderer.domElement.id = "renderer"
       document.body.appendChild( renderer.domElement );
@@ -323,7 +372,7 @@
         uniforms: uniforms,
         vertexShader: vs,
         fragmentShader: fs,
-        opacity: 0, transparent: true
+        //opacity: 0, transparent: true
       })
 
 
@@ -415,6 +464,7 @@
 
       }
 
+
       var geo = new THREE.IcosahedronGeometry( .03 , 4 );
       var mat = new THREE.ShaderMaterial({
         uniforms: uniforms,
@@ -446,7 +496,7 @@
         obj.position.z -= .1;*/
 
         obj.position.z = -.2 + .2 * (-j / 5);
-        obj.scale.multiplyScalar( (j / 5) * 4. );
+        obj.scale.multiplyScalar( ((j+1) / 5) * 4. );
 
         obj.rotation.x = Math.random();
         obj.rotation.y = Math.random();
@@ -539,11 +589,12 @@
   }
 
 
- function switchStream( newStream  ){
+ function switchStream( newStream , song ){
+  changeNote.play();
 
   var s = { v : stream.gain.gain.value } 
   var e = { v : 0 }
-  var tween = new TWEEN.Tween( s ).to( e , 500 );
+  var tween = new TWEEN.Tween( s ).to( e , 100 );
 
   this.tweenTMP = s;
   tween.audio = this.audio
@@ -554,10 +605,12 @@
   tween.onComplete( function(){
 
 
+      renderer.setClearColor( song.params.color , 1 )
+
     console.log('ss')
     stream.audio.src = newStream;
 
-    var t = new TWEEN.Tween({ v: 0 }).to( { v: 1 } , 500 );
+    var t = new TWEEN.Tween({ v: 0 }).to( { v: 1 } , 100 );
 
     t.onUpdate(function(e){
       //console.log( e );
@@ -568,6 +621,15 @@
     t.onComplete( function(){
 
       stream.play();
+
+
+
+      //renderer.setClearColor( 0xff0000 , 1)
+
+      highBody.material = song.playneMat;
+      highBody.material.needsUpdate = true;
+
+
 
     })
 

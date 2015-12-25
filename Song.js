@@ -25,6 +25,22 @@ function Song( audio , controls , id , params ){
   this.uniform = new THREE.Vector4();
 
 
+  var fs = shaders.setValue( shaders.fs[params.playne] , 'links' , LINKS.length );
+  var vs = shaders.setValue( shaders.vs[params.playne] , 'links' , LINKS.length );
+  
+  this.playneMat = new THREE.ShaderMaterial({
+    uniforms:uniforms,
+    vertexShader  : vs,
+    fragmentShader: fs,
+  });
+
+  this.bgMat = new THREE.ShaderMaterial({
+    uniforms:uniforms,
+    vertexShader  : shaders.vs[params.bg],
+    fragmentShader: shaders.fs[params.bg],
+  });
+
+
 }
 
 Song.prototype.updatePosition = function(v){
@@ -112,10 +128,9 @@ Song.prototype.select = function(){
 
   if( activeLink !== this ){
 
-
     var file = "audio/" + this.file + ".mp3";
 
-    switchStream( file );
+    switchStream( file , this );
 
     activeLink = this;
 

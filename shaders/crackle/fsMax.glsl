@@ -113,7 +113,7 @@ $calcAO
 
 void main(){
 
-  vec3 fNorm = uvNormalMap( t_normal , vPos , vUv * 20. , vNorm , .1 , .2 );
+  vec3 fNorm = uvNormalMap( t_normal , vPos , vUv * 20. , vNorm , .1 , .0 );
 
   vec3 ro = vPos;
   vec3 rd = normalize( vPos - vCam );
@@ -129,14 +129,14 @@ void main(){
 
   //col += fNorm * .5 + .5;
 
-  vec3 refr = refract( rd , fNorm , 1. / 1.1 ) ;
+  vec3 refr = refract( rd , fNorm , 1. / 1.2 ) ;
 
   vec2 res = calcIntersection( ro , refr );
 
   //col = texture2D( t_matcap , semLookup( refr , fNorm , modelViewMatrix , normalMatrix ) ).xyz;
  
   float fr = 1.+dot( fNorm, rd );
-  col = texture2D( t_audio , vec2( fr , 0.)).xyz * fr;
+  //col = texture2D( t_audio , vec2( fr , 0.)).xyz * fr;
   float alpha =  .1;
   if( res.y > -.5 ){
 
@@ -147,17 +147,18 @@ void main(){
 
     //col += n * .5 + .5;
     vec3 h = hsv( res.y / 4. , 1. , 1. );
-    col += h *  texture2D( t_matcap , semLookup( refr , n , modelViewMatrix , normalMatrix ) ).xyz;
 
+    float match = dot( rd , -n );
+
+    if( match < .5 ){
+    col += vec3( 1. );
+    }
     alpha = 1.;
 
     }else{
-      if( res.y == 10. ){
+ 
         col = vec3( 1. ) - col; //vec3( 1. );
-      }else{
-        col = vec3( 1. , .5 , .5 ) - col; //vec3( 1. )
-
-      }
+  
     }
     //col *= texture2D( t_audio , vec2(  abs( n.x ) , 0. ) ).xyz;
 

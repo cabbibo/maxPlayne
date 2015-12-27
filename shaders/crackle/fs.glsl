@@ -8,5 +8,6 @@ varying vec2 vUv;
 
 void main(){
   vec3 col = vMNorm * .5 + .5;
-  gl_FragColor = vec4( col , 1. );
+  float d =dot( vMNorm , vec3( 0., 0., 1.));
+  gl_FragColor = vec4( vec3(d) , 1. );
 }

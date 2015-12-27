@@ -2,6 +2,7 @@
 uniform mat4 iModelMat;
 uniform float time;
 uniform sampler2D t_audio;
+uniform float idVal;
 
 varying vec3 vPos;
 varying vec3 vNorm;
@@ -27,7 +28,8 @@ void main(){
   vMNorm = normalize( normalMatrix * normal );
   vMPos = (modelMatrix * vec4( position , 1. )).xyz;
 
-  vPos += .3 * texture2D( t_audio , (vUv + vUv.yx ) / 2. ).xyz;
+  vPos += .3 * texture2D( t_audio , vec2( (idVal + vUv.x + vUv.y ) / 3. , 0.) ).xyz;
+  vPos.x += idVal * .2;
   vPos *= vPos;
 
 

@@ -47,6 +47,7 @@ const float PI = 3.14159;
 $smoothU
 $opU
 
+
 vec3 rgb2hsv(vec3 c)
 {
     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -136,7 +137,7 @@ void main(){
   //col = texture2D( t_matcap , semLookup( refr , fNorm , modelViewMatrix , normalMatrix ) ).xyz;
  
   float fr = 1.+dot( fNorm, rd );
-  col = texture2D( t_audio , vec2( fr , 0.)).xyz * fr;
+  col = vec3(1.) - texture2D( t_audio , vec2( fr , 0.)).xyz * fr;
   float alpha =  .1;
   if( res.y > -.5 ){
 
@@ -144,19 +145,18 @@ void main(){
 
     p = ro + refr * res.x;
     vec3 n = calcNormal( p );
+    float ao = calcAO( p , n );
 
     //col += n * .5 + .5;
     vec3 h = hsv( res.y / 4. , 1. , 1. );
-    col += h *  texture2D( t_matcap , semLookup( refr , n , modelViewMatrix , normalMatrix ) ).xyz;
-
+    col = vec3( ao * ao );
     alpha = 1.;
 
     }else{
       if( res.y == 10. ){
-        col = vec3( 1. ) - col; //vec3( 1. );
+        col = vec3( 1. ); //vec3( 1. );
       }else{
-        col = vec3( 1. , .5 , .5 ) - col; //vec3( 1. )
-
+        col = vec3( 1.); //vec3( 1. )
       }
     }
     //col *= texture2D( t_audio , vec2(  abs( n.x ) , 0. ) ).xyz;

@@ -34,6 +34,9 @@ function Song( audio , controls , id , params ){
     fragmentShader: fs,
   });
 
+  this.bgVS = shaders.vs[params.bg];
+  this.bgFS = shaders.fs[params.bg];
+
   this.bgMat = new THREE.ShaderMaterial({
     uniforms:uniforms,
     vertexShader  : shaders.vs[params.bg],

@@ -85,7 +85,7 @@
       mat : mat,
       bg: "slippery",
       playne : "slipperyMax",
-      color : 0x000000
+      color : 0xD2B48C
     },
     {
       title:"normal",
@@ -95,7 +95,7 @@
       mat : mat,
       bg: "tang",
       playne : "tangMax",
-      color : 0xff0000
+      color : 0x1C0147
     },
 
     {
@@ -117,7 +117,7 @@
       mat : mat,
       bg: "crackle",
       playne : "crackleMax",
-      color : 0x0000ff
+      color : 0x000000
     },
 
 
@@ -472,11 +472,13 @@
         fragmentShader: shaders.fs.halo,
       });
 
+      mandala = [];
 
       for( var j = 0; j < 5; j++){
         var obj = new THREE.Object3D();
 
         for( var i = 0; i < 10; i++ ){
+
           var mesh = new THREE.Mesh( geo , mat );
           //mesh.position.y = .3 * Math.sin(( i / 10 ) * 2 * Math.PI);
           //mesh.position.x = .3 * Math.cos(( i / 10 ) * 2 * Math.PI);
@@ -485,6 +487,7 @@
          //mesh.rotation.x = (j / 5) * 2 * Math.PI;
           mesh.rotation.z = (i / 10 ) * 2 * Math.PI;
           obj.add( mesh );
+          mandala.push( mesh );
         }
 
       /*  obj.position.x =2. * ( Math.random() - .5);
@@ -504,7 +507,11 @@
         obj.lookAt( new THREE.Vector3());
         scene.add( obj );
 
+
+
       }
+
+      links[1].select();
 
 
   }
@@ -629,6 +636,22 @@
       highBody.material = song.playneMat;
       highBody.material.needsUpdate = true;
 
+      for( var i = 0; i < mandala.length; i++ ){
+
+        var id = Math.floor(i / 10);
+        console.log( id );
+
+        var uni = makeNewUniforms( "idVal" , { type:"f" , value: id / 5});
+        var mat = new THREE.ShaderMaterial({
+          uniforms:uni,
+          vertexShader: song.bgVS,
+          fragmentShader: song.bgFS,
+
+        })
+        mandala[i].material = mat;
+        mandala[i].material.needsUpdate = true;
+      }
+
 
 
     })
@@ -640,6 +663,21 @@
 
 }
 
+
+function makeNewUniforms(newPropt , newUniform ){
+
+  var uni = {};
+  for( var propt in uniforms){
+    uni[propt] = uniforms[propt];
+  }
+
+  uni[newPropt] = newUniform;
+
+  return uni;
+
+
+
+}
 
 function onLoad(){
 

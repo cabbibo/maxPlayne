@@ -10,6 +10,7 @@ varying vec3 vMNorm;
 varying vec3 vMPos;
 
 varying vec2 vUv;
+varying float vDis;
 
 
 $simplex
@@ -27,8 +28,12 @@ void main(){
   vMNorm = normalize( normalMatrix * normal );
   vMPos = (modelMatrix * vec4( position , 1. )).xyz;
 
+
   vPos += .3 * texture2D( t_audio , (vUv + vUv.yx ) / 2. ).xyz;
   vPos *= vPos;
+
+
+  vDis = length(vPos/position) * .08;
 
 
   // Use this position to get the final position 
